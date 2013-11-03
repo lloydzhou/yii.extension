@@ -10,13 +10,12 @@
 class JTableAction extends CAction
 {
     public $model;
-    public function run($id = null)
+    public function run($depth = 1)
     {
 		if(is_string($this->model)) $this->model = CActiveRecord::model($this->model);
 		$id = CHtml::ID_PREFIX.get_class($this->model).CHtml::$count++;
-		$options = CJavaScript::encode($this->model->getOptions('_', $id));
-		//$this->controller->renderText
-		echo ( 
+		$options = CJavaScript::encode($this->model->getOptions('_', $id, $depth));
+		$this->controller->renderText ( 
 <<<HTML
 <html>
   <head>
