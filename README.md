@@ -5,7 +5,7 @@ jtable
 
 ===
 config it in controller
-...js
+```php
 	public function actions()
 	{
 		return array(
@@ -27,4 +27,4 @@ config it in controller
 			),
 		);
 	}
-...
+```
