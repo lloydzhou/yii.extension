@@ -51,7 +51,7 @@ class JRestAction extends CAction
                         ? $model 
                         : call_user_func(array($model, $this->routes[$type]['id']),$id)
                     : call_user_func(array($model, current($this->routes[$type])));
-            if ($result) 
+            if ($result || is_array($result)) 
                 self::renderJSON(is_bool($result) ? $model : $result, false, 'get response for request '. $type. ' successed.', isset($model->totalRecordCount) ? $model->totalRecordCount : false);
             else 
                 self::renderJSON(null, true, $model ? CHtml::errorSummary($model) : '');
@@ -62,7 +62,7 @@ class JRestAction extends CAction
     {
 		if ($error) 
 			echo CJSON::encode(array('Result' => 'ERROR', 'Message' => $message));
-        if ($totalRecordCount)
+        if (is_array($data) || $totalRecordCount)
 			echo CJSON::encode(array('Result' => 'OK', 'Records' => $data, 'TotalRecordCount' => $totalRecordCount));
 		else 
 	        echo CJSON::encode(array('Result' => 'OK', 'Record' => $data));
