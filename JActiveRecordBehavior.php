@@ -27,12 +27,12 @@ class JActiveRecordBehavior extends CBehavior
 	public function getData()
 	{
 		$this->owner->attributes = $_GET;
-		var_dump($_GET);
-		var_dump($this->owner->attributes);
+		//var_dump($this->owner->attributes);
 		$criteria=new CDbCriteria;
-		foreach($this->owner->tableSchema->columns as $k=>$c)
-			$criteria->compare($k,$this->owner->$k);
-		//$criteria->compare('password',$this->owner->password);
+		foreach($this->owner->attributes as $k=>$c)
+			if (isset($_GET[$k]) || isset($_POST[$k])) 
+				$criteria->compare($k,Yii::app()->request->getParam($k), true);
+		//var_dump($criteria);			
 		
 		$dp = new CActiveDataProvider($this->owner, array(
 			'criteria'=>$criteria,
@@ -64,27 +64,25 @@ class JActiveRecordBehavior extends CBehavior
 			),
 			'fields' => array()
 		);
-		foreach($this->owner->tableSchema->columns as $k=>$c)
-		{
-			$title = $this->owner->getAttributeLabel($c->name);
-			if ($c->isPrimaryKey || $c->name == $relation)
-				$options['fields'][$k] = array('title' => $title, 'key' => true, 'create' => false,'edit'=> false,'list' => false);
-			else $options['fields'][$k] = array('title' => $title);
-		}
-		
-		if ($depth)
+		/* relations */
+		if ($depth > 0)
 		foreach($this->owner->relations() as $k=>$r)
 		{
-			$o = CJavaScript::encode(CActiveRecord::model($r[1])->getOptions($r[2], $id, --$depth));
-			$options['fields'][$k] = array('title' => '','width' => '5%','sorting' => false,'edit' => false,'create' => false,
-				'display' => 	new CJavaScriptExpression(
+			if ('CHasManyRelation' === $r[0])
+			{
+				$key = $this->owner->getPrimaryKey();
+				if (!$key) $key = 'id';// ? $this->owner->primaryKey() : 'id';
+				//var_dump($key ); 
+				$o = CJavaScript::encode(CActiveRecord::model($r[1])->getOptions($r[2], $id, --$depth));
+				$options['fields'][$k] = array('title' => '','width' => '3%','sorting' => false,'edit' => false,'create' => false,
+					'display' => 	new CJavaScriptExpression(
 <<<JS
 js:function(data){
 	var \$img = \$('<img src="/jtable/samples/Codes/scripts/list_metro.png" title="Edit {$r[1]}" />');
 	//Open child table when user clicks the image
 	\$img.click(function () {
 		var o = {$o};
-		for (var i in o.actions) if (data.record.{$r[2]}) o.actions[i].url += '&{$r[2]}=' + data.record.{$r[2]};
+		for (var i in o.actions) if (data.record.{$key}) o.actions[i].url += '?{$r[2]}=' + data.record.{$key};
 		\$('#{$id}').jtable('openChildTable',
 			\$img.closest('tr'),
 			o, 
@@ -95,14 +93,16 @@ js:function(data){
 }
 JS
 ));
-			
-			//var_dump($k);
+			}
+		}
+		// columns
+		foreach($this->owner->tableSchema->columns as $k=>$c)
+		{
+			$title = $this->owner->getAttributeLabel($c->name);
+			if ($c->isPrimaryKey || $c->name == $relation)
+				$options['fields'][$k] = array('title' => $title, 'key' => true, 'create' => false,'edit'=> false,'list' => false);
+			else $options['fields'][$k] = array('title' => $title);
 		}
 		return $options;
-	}
-	public function getJTableFields()
-	{
-		$fields = array();
-		return $fields;
 	}
 }
