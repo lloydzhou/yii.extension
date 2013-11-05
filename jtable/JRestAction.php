@@ -47,6 +47,7 @@ class JRestAction extends CAction
 			$model->attributes = $_GET;
             if ('PUT' == $type) $model->attributes = $request->getRestParams();//$request->getPut($this->model);
             if ('POST' == $type) $model->attributes = $_POST;//$request->getPost($this->model);
+            if (!isset($model->getData)) $model->attachBehavior('jtable', new JActiveRecordBehavior);
             $result = ($id && array_key_exists('id', $this->routes[$type]))
                     ? ('GET' == $type && 'findByPk' == $this->routes[$type]['id']) 
                         ? $model 
