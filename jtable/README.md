@@ -2,10 +2,9 @@ yii.extension
 =============
 
 jtable 
-
 ===
-please copy the files into you extension folder of you system.
 
+please copy the files into you extension folder of you system.
 ===
 config it in controller
 ```php
