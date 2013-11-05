@@ -26,13 +26,13 @@ class JActiveRecordBehavior extends CBehavior
 	public $totalRecordCount = 0;
 	public function getData()
 	{
-		$this->owner->attributes = $_GET;
-		//var_dump($this->owner->attributes);
 		$criteria=new CDbCriteria;
 		foreach($this->owner->attributes as $k=>$c)
 			if (isset($_GET[$k]) || isset($_POST[$k])) 
-				$criteria->compare($k,Yii::app()->request->getParam($k), true);
-		//var_dump($criteria);			
+            {
+                $c = $this->owner->tableSchema->getColumn($k);
+            	$criteria->compare($k,Yii::app()->request->getParam($k), !($c->isForeignKey || $c->isPrimaryKey));
+            }	
 		
 		$dp = new CActiveDataProvider($this->owner, array(
 			'criteria'=>$criteria,
@@ -77,7 +77,6 @@ class JActiveRecordBehavior extends CBehavior
 				$model = CActiveRecord::model($r[1]);
 				if (!isset($model->getOptions)) $model->attachBehavior('jtable', new JActiveRecordBehavior);
 				$o = CJavaScript::encode($model->getOptions($r[2], $id, --$depth, $pageSize));
-				//var_dump($k);
 				$assets = CHtml::asset(dirname(__FILE__) . '/assets/');
 				$relations[$k] = array('title' => '','width' => '1%','sorting' => false,'edit' => false,'create' => false,
 					'display' => 	new CJavaScriptExpression(
