@@ -31,9 +31,9 @@ class JActiveRecordBehavior extends CBehavior
 			if (isset($_GET[$k]) || isset($_POST[$k])) 
             {
                 $c = $this->owner->tableSchema->getColumn($k);
-            	$criteria->compare($k,Yii::app()->request->getParam($k), !($c->isForeignKey || $c->isPrimaryKey));
-            }	
-		
+            	$criteria->compare($k,Yii::app()->request->getParam($k), !('string' != $c->type || $c->isForeignKey || $c->isPrimaryKey));
+            }
+
 		$dp = new CActiveDataProvider($this->owner, array(
 			'criteria'=>$criteria,
 			'sort'=>array(
@@ -64,10 +64,12 @@ class JActiveRecordBehavior extends CBehavior
 	{
 		// columns
 		$fields = $this->getFields($relation);
-		$relations = array();
-		$name = CHtml::modelName($this->owner);
-		$key = $this->owner->getPrimaryKey();
+		
+        $relations = array();
+        $name =get_class($this->owner);
+        $key = $this->owner->getPrimaryKey();
 		if (!$key) $key = 'id';
+        
 		/* relations */
 		if ($depth > 0)
 		foreach($this->owner->relations() as $k=>$r)
@@ -77,14 +79,14 @@ class JActiveRecordBehavior extends CBehavior
 				$model = CActiveRecord::model($r[1]);
 				if (!isset($model->getOptions)) $model->attachBehavior('jtable', new JActiveRecordBehavior);
 				$o = CJavaScript::encode($model->getOptions($r[2], $id, --$depth, $pageSize));
+                
 				$assets = CHtml::asset(dirname(__FILE__) . '/assets/');
-				$relations[$k] = array('title' => '','width' => '1%','sorting' => false,'edit' => false,'create' => false,
+				$relations[$k] = array('title' => '','width' => '3%','sorting' => false,'edit' => false,'create' => false,
 					'display' => 	new CJavaScriptExpression(
 <<<JS
 js:function(data){
 	var \$img = \$('<img src="$assets/list_metro.png" title="Edit {$r[1]}" />');
 	//Open child table when user clicks the image
-	console.log(data);
 	var o = {$o};
 	for (var i in o.actions) if (data.record.{$key}) o.actions[i].url = o.actions[i].url.replace(/__relation__/g, data.record.{$key});
 	o.title += ' belongs to {$name} #' + data.record.{$key}
@@ -123,6 +125,7 @@ JS
 			else if ($c->name == $relation)
 				$fields[$k] = array('title' => $title, 'key' => false, 'create' => false);
 			else $fields[$k] = array('title' => $title, 'list' => 'password' === $k ? false : true);
+			$fields[$k]['display'] = "js:function (data){ return formatData(data, '$k');}";
 		}
 		return $fields;
 	}
